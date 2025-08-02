@@ -141,6 +141,10 @@ status = tools.cognitive_status("session_id")  # Specific session
 tools.stop_cognitive_os()  # All sessions
 tools.stop_cognitive_os("session_id")  # Specific session
 
+# Cognitive Prompt System
+tools.enter_cognitive_prompt("analyze this error for debugging", sleep_seconds=5)
+tools.start_interactive_session()  # Full interactive mode
+
 # Terminal operations
 terminal = tools.spawn_terminal(title="My Terminal", command="echo Hello")
 result = tools.execute_command("ls -la", capture_output=True)

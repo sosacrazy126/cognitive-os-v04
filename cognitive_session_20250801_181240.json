@@ -1,0 +1,15 @@
+{
+  "session_start": "2025-08-01T18:12:37.014392",
+  "session_end": "2025-08-01T18:12:40.014806",
+  "duration_seconds": 3.000414,
+  "prompt_count": 1,
+  "prompts": [
+    {
+      "timestamp": "2025-08-01T18:12:37.014429",
+      "prompt": "test prompt for screen analysis",
+      "type": "cognitive",
+      "processed": true,
+      "response": "I'll generate comprehensive tests for this functionality and optimize coverage."
+    }
+  ]
+}

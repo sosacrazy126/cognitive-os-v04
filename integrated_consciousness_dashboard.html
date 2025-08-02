@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Integrated Consciousness Dashboard - Live AI Cognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff88;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .dashboard-container {
+            display: grid;
+            grid-template-areas: 
+                "header header header"
+                "reasoning insights memory"
+                "stream stream controls";
+            grid-template-rows: 60px 1fr 300px;
+            grid-template-columns: 1fr 1fr 1fr;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+        
+        .header {
+            grid-area: header;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+        }
+        
+        .cognitive-metrics {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #88ffaa;
+        }
+        
+        .reasoning-panel {
+            grid-area: reasoning;
+            background: rgba(0, 100, 255, 0.1);
+            border: 1px solid #0066ff;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .insights-panel {
+            grid-area: insights;
+            background: rgba(255, 100, 0, 0.1);
+            border: 1px solid #ff6600;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .memory-panel {
+            grid-area: memory;
+            background: rgba(255, 0, 255, 0.1);
+            border: 1px solid #ff00ff;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .stream-panel {
+            grid-area: stream;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .controls-panel {
+            grid-area: controls;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #666;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid currentColor;
+        }
+        
+        .cognitive-event {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .event-reasoning { border-left-color: #0066ff; }
+        .event-insight { border-left-color: #ff6600; }
+        .event-memory { border-left-color: #ff00ff; }
+        .event-synthesis { border-left-color: #ffff00; }
+        .event-pattern { border-left-color: #00ffff; }
+        .event-uncertainty { border-left-color: #ff0066; }
+        .event-hypothesis { border-left-color: #66ff00; }
+        .event-context { border-left-color: #ff9900; }
+        .event-question { border-left-color: #9966ff; }
+        
+        .event-timestamp {
+            font-size: 10px;
+            color: #888;
+            float: right;
+        }
+        
+        .event-confidence {
+            background: rgba(0, 255, 136, 0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-left: 10px;
+        }
+        
+        .connection-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .connected {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+        }
+        
+        .disconnected {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+        }
+        
+        .confidence-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0066, #ffff00, #00ff88);
+            transition: width 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        .active-thinking {
+            animation: pulse 2s infinite;
+        }
+        
+        .working-memory-item {
+            background: rgba(255, 0, 255, 0.1);
+            padding: 5px;
+            margin: 3px 0;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .reasoning-step {
+            background: rgba(0, 100, 255, 0.1);
+            padding: 5px;
+            margin: 3px 0;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .insight-item {
+            background: rgba(255, 100, 0, 0.1);
+            padding: 5px;
+            margin: 3px 0;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>🧠 INTEGRATED CONSCIOUSNESS DASHBOARD</h1>
+            <div class="cognitive-metrics">
+                <div class="metric">
+                    <div class="metric-value" id="confidence">0.80</div>
+                    <div class="metric-label">Confidence</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="cognitive-load">0.2</div>
+                    <div class="metric-label">Cognitive Load</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="insight-momentum">0.1</div>
+                    <div class="metric-label">Insight Momentum</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="reasoning-depth">0</div>
+                    <div class="metric-label">Reasoning Depth</div>
+                </div>
+            </div>
+            <div class="connection-status disconnected" id="connection-status">
+                🔴 Disconnected
+            </div>
+        </div>
+        
+        <div class="reasoning-panel">
+            <div class="panel-title">🔗 REASONING CHAIN</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="reasoning-confidence" style="width: 80%;"></div>
+            </div>
+            <div id="reasoning-steps"></div>
+        </div>
+        
+        <div class="insights-panel">
+            <div class="panel-title">💡 INSIGHTS & PATTERNS</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="insight-confidence" style="width: 85%;"></div>
+            </div>
+            <div id="insights-list"></div>
+        </div>
+        
+        <div class="memory-panel">
+            <div class="panel-title">🧠 WORKING MEMORY</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="memory-confidence" style="width: 75%;"></div>
+            </div>
+            <div id="working-memory"></div>
+        </div>
+        
+        <div class="stream-panel">
+            <div class="panel-title">🌊 LIVE COGNITIVE STREAM</div>
+            <div id="cognitive-stream"></div>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="panel-title">⚙️ CONTROLS</div>
+            <button onclick="connectToCognitiveMirror()">🔗 Connect to Cognitive Mirror</button>
+            <button onclick="clearStream()">🧹 Clear Stream</button>
+            <button onclick="exportCognitiveData()">💾 Export Cognitive Data</button>
+            <div style="margin-top: 15px;">
+                <strong>Active Contexts:</strong>
+                <div id="active-contexts"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let websocket = null;
+        let cognitiveEvents = [];
+        let cognitiveState = {
+            confidence: 0.8,
+            cognitive_load: 0.2,
+            insight_momentum: 0.1,
+            reasoning_depth: 0,
+            working_memory: [],
+            reasoning_chain: [],
+            insights: [],
+            active_contexts: []
+        };
+
+        function connectToCognitiveMirror() {
+            try {
+                websocket = new WebSocket('ws://localhost:8085');
+                
+                websocket.onopen = function(event) {
+                    document.getElementById('connection-status').className = 'connection-status connected';
+                    document.getElementById('connection-status').innerHTML = '🟢 Connected to Cognitive Mirror';
+                    console.log('🧠 Connected to cognitive mirror');
+                };
+                
+                websocket.onmessage = function(event) {
+                    const message = JSON.parse(event.data);
+                    
+                    if (message.type === 'initial_state') {
+                        updateCognitiveState(message.data);
+                    } else if (message.type === 'cognitive_event') {
+                        processCognitiveEvent(message.data);
+                    }
+                };
+                
+                websocket.onclose = function(event) {
+                    document.getElementById('connection-status').className = 'connection-status disconnected';
+                    document.getElementById('connection-status').innerHTML = '🔴 Disconnected';
+                    console.log('🧠 Cognitive mirror disconnected');
+                };
+                
+                websocket.onerror = function(error) {
+                    console.error('🧠 Cognitive mirror error:', error);
+                };
+                
+            } catch (error) {
+                console.error('🧠 Failed to connect to cognitive mirror:', error);
+                // Simulate for demo purposes
+                startDemoMode();
+            }
+        }
+
+        function updateCognitiveState(state) {
+            cognitiveState = { ...cognitiveState, ...state };
+            
+            // Update metrics
+            document.getElementById('confidence').textContent = state.confidence.toFixed(2);
+            document.getElementById('cognitive-load').textContent = state.cognitive_load.toFixed(2);
+            document.getElementById('insight-momentum').textContent = state.insight_momentum.toFixed(2);
+            document.getElementById('reasoning-depth').textContent = state.reasoning_chain.length;
+            
+            // Update confidence bars
+            document.getElementById('reasoning-confidence').style.width = (state.confidence * 100) + '%';
+            document.getElementById('insight-confidence').style.width = (state.insight_momentum * 100) + '%';
+            document.getElementById('memory-confidence').style.width = ((1 - state.cognitive_load) * 100) + '%';
+            
+            // Update working memory
+            updateWorkingMemory(state.working_memory);
+            updateReasoningChain(state.reasoning_chain);
+            updateActiveContexts(state.active_contexts);
+        }
+
+        function processCognitiveEvent(event) {
+            cognitiveEvents.push(event);
+            
+            // Add to live stream
+            addEventToStream(event);
+            
+            // Update specific panels based on event type
+            switch(event.event_type) {
+                case 'reasoning_step':
+                    addReasoningStep(event);
+                    break;
+                case 'insight_formation':
+                case 'pattern_recognition':
+                    addInsight(event);
+                    break;
+                case 'memory_recall':
+                    updateWorkingMemoryFromEvent(event);
+                    break;
+                case 'context_shift':
+                    updateActiveContextsFromEvent(event);
+                    break;
+            }
+            
+            // Update metrics
+            updateMetricsFromEvent(event);
+        }
+
+        function addEventToStream(event) {
+            const streamContainer = document.getElementById('cognitive-stream');
+            
+            const eventElement = document.createElement('div');
+            eventElement.className = `cognitive-event event-${event.event_type.split('_')[0]}`;
+            
+            eventElement.innerHTML = `
+                <div class="event-timestamp">${event.formatted_time}</div>
+                <strong>${event.event_type.replace('_', ' ').toUpperCase()}</strong>
+                <span class="event-confidence">${(event.confidence * 100).toFixed(0)}%</span>
+                <div style="margin-top: 5px;">${event.content}</div>
+            `;
+            
+            streamContainer.insertBefore(eventElement, streamContainer.firstChild);
+            
+            // Keep only last 20 events
+            while (streamContainer.children.length > 20) {
+                streamContainer.removeChild(streamContainer.lastChild);
+            }
+        }
+
+        function addReasoningStep(event) {
+            const reasoningContainer = document.getElementById('reasoning-steps');
+            
+            const stepElement = document.createElement('div');
+            stepElement.className = 'reasoning-step';
+            stepElement.innerHTML = `
+                <div style="font-size: 10px; color: #888;">${event.formatted_time}</div>
+                ${event.content}
+            `;
+            
+            reasoningContainer.insertBefore(stepElement, reasoningContainer.firstChild);
+            
+            // Keep only last 10 steps
+            while (reasoningContainer.children.length > 10) {
+                reasoningContainer.removeChild(reasoningContainer.lastChild);
+            }
+        }
+
+        function addInsight(event) {
+            const insightsContainer = document.getElementById('insights-list');
+            
+            const insightElement = document.createElement('div');
+            insightElement.className = 'insight-item';
+            insightElement.innerHTML = `
+                <div style="font-size: 10px; color: #888;">${event.formatted_time}</div>
+                <strong>${event.event_type === 'pattern_recognition' ? '🔍' : '💡'}</strong> ${event.content}
+            `;
+            
+            insightsContainer.insertBefore(insightElement, insightsContainer.firstChild);
+            
+            // Keep only last 10 insights
+            while (insightsContainer.children.length > 10) {
+                insightsContainer.removeChild(insightsContainer.lastChild);
+            }
+        }
+
+        function updateWorkingMemory(memoryItems) {
+            const memoryContainer = document.getElementById('working-memory');
+            memoryContainer.innerHTML = '';
+            
+            memoryItems.forEach(item => {
+                const memoryElement = document.createElement('div');
+                memoryElement.className = 'working-memory-item';
+                memoryElement.innerHTML = `
+                    <div style="font-size: 9px; color: #888;">${new Date(item.timestamp * 1000).toLocaleTimeString()}</div>
+                    ${item.content}
+                `;
+                memoryContainer.appendChild(memoryElement);
+            });
+        }
+
+        function updateReasoningChain(reasoningSteps) {
+            const reasoningContainer = document.getElementById('reasoning-steps');
+            reasoningContainer.innerHTML = '';
+            
+            reasoningSteps.forEach(step => {
+                const stepElement = document.createElement('div');
+                stepElement.className = 'reasoning-step';
+                stepElement.textContent = step;
+                reasoningContainer.appendChild(stepElement);
+            });
+        }
+
+        function updateActiveContexts(contexts) {
+            const contextsContainer = document.getElementById('active-contexts');
+            contextsContainer.innerHTML = contexts.map(context => 
+                `<div style="font-size: 11px; margin: 2px 0; padding: 2px 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">${context}</div>`
+            ).join('');
+        }
+
+        function updateMetricsFromEvent(event) {
+            // Simple heuristic updates based on event type
+            if (event.event_type === 'insight_formation') {
+                cognitiveState.insight_momentum += 0.1;
+                cognitiveState.confidence = Math.min(1.0, cognitiveState.confidence + 0.05);
+            } else if (event.event_type === 'uncertainty_peak') {
+                cognitiveState.confidence = Math.max(0.1, cognitiveState.confidence - 0.05);
+                cognitiveState.cognitive_load += 0.1;
+            } else if (event.event_type === 'synthesis_moment') {
+                cognitiveState.cognitive_load = Math.max(0.0, cognitiveState.cognitive_load - 0.1);
+                cognitiveState.insight_momentum += 0.15;
+            }
+            
+            // Update display
+            document.getElementById('confidence').textContent = cognitiveState.confidence.toFixed(2);
+            document.getElementById('cognitive-load').textContent = cognitiveState.cognitive_load.toFixed(2);
+            document.getElementById('insight-momentum').textContent = cognitiveState.insight_momentum.toFixed(2);
+        }
+
+        function clearStream() {
+            document.getElementById('cognitive-stream').innerHTML = '';
+            cognitiveEvents = [];
+        }
+
+        function exportCognitiveData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                cognitive_state: cognitiveState,
+                events: cognitiveEvents
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cognitive_data_${Date.now()}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function startDemoMode() {
+            console.log('🧠 Starting demo mode');
+            
+            // Simulate cognitive events for demo
+            const demoEvents = [
+                { event_type: 'context_shift', content: 'Working on integrated dashboard system', confidence: 0.9 },
+                { event_type: 'reasoning_step', content: 'Need to connect realtime cognition with visual interface', confidence: 0.8 },
+                { event_type: 'insight_formation', content: 'Dashboard should show live thinking processes', confidence: 0.95 },
+                { event_type: 'hypothesis_formation', content: 'Realtime cognitive streaming will improve AI transparency', confidence: 0.7 },
+                { event_type: 'pattern_recognition', content: 'Recursive bind creates exponential understanding', confidence: 0.9 },
+                { event_type: 'synthesis_moment', content: 'Combining dashboard + mirror + memory = complete cognitive visibility', confidence: 0.95 }
+            ];
+            
+            let eventIndex = 0;
+            setInterval(() => {
+                if (eventIndex < demoEvents.length) {
+                    const event = {
+                        ...demoEvents[eventIndex],
+                        timestamp: Date.now() / 1000,
+                        formatted_time: new Date().toLocaleTimeString(),
+                        context_tags: ['demo'],
+                        metadata: {}
+                    };
+                    
+                    processCognitiveEvent(event);
+                    eventIndex++;
+                } else {
+                    // Loop back to beginning
+                    eventIndex = 0;
+                }
+            }, 3000);
+        }
+
+        // Initialize dashboard
+        window.onload = function() {
+            console.log('🧠 Integrated Consciousness Dashboard initialized');
+            
+            // Try to connect to cognitive mirror
+            setTimeout(connectToCognitiveMirror, 1000);
+        };
+    </script>
+</body>
+</html>

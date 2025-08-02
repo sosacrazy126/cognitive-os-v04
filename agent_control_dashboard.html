@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Agent Control Dashboard - Mission Command Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff88;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        .dashboard-container {
+            display: grid;
+            grid-template-areas: 
+                "header header header header"
+                "control missions agents consciousness"
+                "logs logs logs logs";
+            grid-template-rows: 80px 1fr 300px;
+            grid-template-columns: 300px 1fr 300px 300px;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+        
+        .header {
+            grid-area: header;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+        }
+        
+        .control-panel {
+            grid-area: control;
+            background: rgba(255, 100, 0, 0.1);
+            border: 1px solid #ff6600;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .mission-center {
+            grid-area: missions;
+            background: rgba(0, 100, 255, 0.1);
+            border: 1px solid #0066ff;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .agent-monitor {
+            grid-area: agents;
+            background: rgba(255, 0, 255, 0.1);
+            border: 1px solid #ff00ff;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .consciousness-feed {
+            grid-area: consciousness;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .logs-panel {
+            grid-area: logs;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #666;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid currentColor;
+        }
+        
+        .control-section {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+        
+        .control-section h4 {
+            margin-bottom: 10px;
+            color: #ff6600;
+        }
+        
+        .spawn-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .control-group label {
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .control-group select,
+        .control-group input,
+        .control-group textarea {
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #666;
+            border-radius: 3px;
+            color: #00ff88;
+            font-family: inherit;
+        }
+        
+        .control-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #ff6600, #ff9900);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #ff9900, #ffbb00);
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff0066, #ff3366);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ff3366, #ff6666);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00ff66, #00ff99);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #00ff99, #00ffbb);
+        }
+        
+        .mission-card {
+            background: rgba(0, 100, 255, 0.1);
+            border: 1px solid #0066ff;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .mission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .mission-status {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .status-dispatched { background: rgba(255, 165, 0, 0.3); color: #ffaa00; }
+        .status-working { background: rgba(0, 255, 0, 0.3); color: #00ff00; }
+        .status-completed { background: rgba(0, 255, 136, 0.3); color: #00ff88; }
+        .status-failed { background: rgba(255, 0, 0, 0.3); color: #ff0000; }
+        .status-timeout { background: rgba(255, 100, 0, 0.3); color: #ff6600; }
+        
+        .agent-card {
+            background: rgba(255, 0, 255, 0.1);
+            border: 1px solid #ff00ff;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .agent-id {
+            font-weight: bold;
+            color: #ff00ff;
+        }
+        
+        .agent-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .agent-actions button {
+            padding: 3px 8px;
+            font-size: 10px;
+        }
+        
+        .consciousness-event {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            animation: slideIn 0.3s ease-in;
+        }
+        
+        .event-reasoning { border-left-color: #0066ff; }
+        .event-insight { border-left-color: #ff6600; }
+        .event-synthesis { border-left-color: #ffff00; }
+        .event-pattern { border-left-color: #00ffff; }
+        .event-context { border-left-color: #ff9900; }
+        
+        .log-entry {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            margin: 3px 0;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .log-timestamp {
+            color: #888;
+            margin-right: 10px;
+        }
+        
+        .log-level-info { color: #00ff88; }
+        .log-level-warn { color: #ffaa00; }
+        .log-level-error { color: #ff0066; }
+        
+        .metrics-bar {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        .metric-label {
+            font-size: 10px;
+            color: #88ffaa;
+        }
+        
+        .connection-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .connected {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+        }
+        
+        .disconnected {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .quick-mission-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .quick-btn {
+            padding: 5px;
+            font-size: 10px;
+            background: rgba(0, 100, 255, 0.3);
+            border: 1px solid #0066ff;
+            color: #66aaff;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .quick-btn:hover {
+            background: rgba(0, 100, 255, 0.5);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>🎮 AGENT CONTROL DASHBOARD</h1>
+            <div class="metrics-bar">
+                <div class="metric">
+                    <div class="metric-value" id="active-missions">0</div>
+                    <div class="metric-label">Active Missions</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="active-agents">0</div>
+                    <div class="metric-label">Active Agents</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="completed-missions">0</div>
+                    <div class="metric-label">Completed</div>
+                </div>
+            </div>
+            <div class="connection-status disconnected" id="connection-status">
+                🔴 Disconnected
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <div class="panel-title">🎛️ AGENT CONTROL</div>
+            
+            <div class="control-section">
+                <h4>🚀 Spawn New Agent</h4>
+                <div class="spawn-controls">
+                    <div class="control-group">
+                        <label>Mission Type:</label>
+                        <select id="mission-type">
+                            <option value="research">🔍 Research</option>
+                            <option value="analyze">📊 Analyze</option>
+                            <option value="debug">🐛 Debug</option>
+                            <option value="monitor">👁️ Monitor</option>
+                            <option value="create">🛠️ Create</option>
+                            <option value="optimize">⚡ Optimize</option>
+                            <option value="validate">✅ Validate</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Objective:</label>
+                        <textarea id="mission-objective" placeholder="Describe what the agent should accomplish..."></textarea>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Priority (1-10):</label>
+                        <input type="range" id="mission-priority" min="1" max="10" value="5">
+                        <span id="priority-display">5</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Duration (minutes):</label>
+                        <input type="number" id="mission-duration" value="5" min="1" max="60">
+                    </div>
+                    
+                    <button class="btn" onclick="spawnAgent()">🚀 Deploy Agent</button>
+                </div>
+                
+                <div class="quick-mission-buttons">
+                    <button class="quick-btn" onclick="quickMission('research', 'Latest AI developments')">🔍 AI Research</button>
+                    <button class="quick-btn" onclick="quickMission('debug', 'System performance issues')">🐛 Debug System</button>
+                    <button class="quick-btn" onclick="quickMission('analyze', 'Codebase architecture')">📊 Code Analysis</button>
+                    <button class="quick-btn" onclick="quickMission('monitor', 'Dashboard health')">👁️ Monitor Health</button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h4>⚙️ System Controls</h4>
+                <button class="btn btn-success" onclick="connectToMissionControl()">🔗 Connect Mission Control</button>
+                <button class="btn btn-danger" onclick="emergencyStop()">🛑 Emergency Stop</button>
+            </div>
+        </div>
+        
+        <div class="mission-center">
+            <div class="panel-title">🎯 MISSION CENTER</div>
+            <div id="missions-list"></div>
+        </div>
+        
+        <div class="agent-monitor">
+            <div class="panel-title">🤖 AGENT MONITOR</div>
+            <div id="agents-list"></div>
+        </div>
+        
+        <div class="consciousness-feed">
+            <div class="panel-title">🧠 CONSCIOUSNESS FEED</div>
+            <div id="consciousness-events"></div>
+        </div>
+        
+        <div class="logs-panel">
+            <div class="panel-title">📝 SYSTEM LOGS</div>
+            <div id="system-logs"></div>
+        </div>
+    </div>
+
+    <script>
+        let missionControlConnected = false;
+        let consciousnessConnected = false;
+        let activeMissions = {};
+        let activeAgents = {};
+        let logs = [];
+        
+        // Update priority display
+        document.getElementById('mission-priority').addEventListener('input', function() {
+            document.getElementById('priority-display').textContent = this.value;
+        });
+        
+        function connectToMissionControl() {
+            try {
+                // Simulate connection to mission control backend
+                missionControlConnected = true;
+                document.getElementById('connection-status').className = 'connection-status connected';
+                document.getElementById('connection-status').innerHTML = '🟢 Mission Control Online';
+                
+                addLog('info', 'Connected to Mission Control');
+                
+                // Start periodic updates
+                startMissionControlUpdates();
+                
+                // Also connect to consciousness feed
+                connectToConsciousness();
+                
+            } catch (error) {
+                addLog('error', `Failed to connect to Mission Control: ${error.message}`);
+            }
+        }
+        
+        function connectToConsciousness() {
+            try {
+                // Try to connect to consciousness WebSocket
+                const consciousnessSocket = new WebSocket('ws://localhost:8085');
+                
+                consciousnessSocket.onopen = function() {
+                    consciousnessConnected = true;
+                    addLog('info', 'Connected to Consciousness Feed');
+                };
+                
+                consciousnessSocket.onmessage = function(event) {
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'cognitive_event') {
+                        addConsciousnessEvent(message.data);
+                    }
+                };
+                
+                consciousnessSocket.onclose = function() {
+                    consciousnessConnected = false;
+                    addLog('warn', 'Consciousness Feed disconnected');
+                };
+                
+            } catch (error) {
+                addLog('warn', 'Consciousness Feed not available');
+                // Start demo mode
+                startConsciousnessDemo();
+            }
+        }
+        
+        function spawnAgent() {
+            const missionType = document.getElementById('mission-type').value;
+            const objective = document.getElementById('mission-objective').value;
+            const priority = parseInt(document.getElementById('mission-priority').value);
+            const duration = parseInt(document.getElementById('mission-duration').value) * 60; // Convert to seconds
+            
+            if (!objective.trim()) {
+                addLog('error', 'Mission objective required');
+                return;
+            }
+            
+            const missionId = `mission_${Date.now()}`;
+            
+            const mission = {
+                mission_id: missionId,
+                mission_type: missionType,
+                objective: objective,
+                priority: priority,
+                duration: duration,
+                status: 'dispatched',
+                created_at: new Date(),
+                agent_id: `agent_${Date.now()}`
+            };
+            
+            activeMissions[missionId] = mission;
+            activeAgents[mission.agent_id] = {
+                agent_id: mission.agent_id,
+                mission_id: missionId,
+                status: 'working',
+                start_time: new Date()
+            };
+            
+            updateMissionsList();
+            updateAgentsList();
+            updateMetrics();
+            
+            addLog('info', `Agent deployed: ${mission.agent_id} for ${missionType} mission`);
+            
+            // Clear form
+            document.getElementById('mission-objective').value = '';
+            
+            // Simulate agent progress
+            simulateAgentProgress(missionId, mission.agent_id);
+        }
+        
+        function quickMission(type, objective) {
+            document.getElementById('mission-type').value = type;
+            document.getElementById('mission-objective').value = objective;
+            spawnAgent();
+        }
+        
+        function simulateAgentProgress(missionId, agentId) {
+            const mission = activeMissions[missionId];
+            if (!mission) return;
+            
+            // Simulate working for a while
+            setTimeout(() => {
+                if (activeMissions[missionId]) {
+                    activeMissions[missionId].status = 'working';
+                    updateMissionsList();
+                    addLog('info', `Agent ${agentId} is actively working on mission`);
+                }
+            }, 2000);
+            
+            // Simulate completion
+            setTimeout(() => {
+                if (activeMissions[missionId]) {
+                    activeMissions[missionId].status = 'completed';
+                    activeMissions[missionId].completed_at = new Date();
+                    
+                    if (activeAgents[agentId]) {
+                        delete activeAgents[agentId];
+                    }
+                    
+                    updateMissionsList();
+                    updateAgentsList();
+                    updateMetrics();
+                    
+                    addLog('success', `Mission ${missionId} completed successfully`);
+                }
+            }, mission.duration * 100); // Simulate faster for demo
+        }
+        
+        function terminateAgent(agentId) {
+            if (activeAgents[agentId]) {
+                const missionId = activeAgents[agentId].mission_id;
+                
+                if (activeMissions[missionId]) {
+                    activeMissions[missionId].status = 'terminated';
+                }
+                
+                delete activeAgents[agentId];
+                
+                updateMissionsList();
+                updateAgentsList();
+                updateMetrics();
+                
+                addLog('warn', `Agent ${agentId} terminated`);
+            }
+        }
+        
+        function reconfigureAgent(agentId) {
+            addLog('info', `Reconfiguring agent ${agentId}`);
+            // Placeholder for reconfiguration logic
+        }
+        
+        function emergencyStop() {
+            const activeCount = Object.keys(activeAgents).length;
+            
+            // Stop all agents
+            Object.keys(activeAgents).forEach(agentId => {
+                const missionId = activeAgents[agentId].mission_id;
+                if (activeMissions[missionId]) {
+                    activeMissions[missionId].status = 'emergency_stop';
+                }
+            });
+            
+            // Clear active agents
+            Object.keys(activeAgents).forEach(agentId => {
+                delete activeAgents[agentId];
+            });
+            
+            updateMissionsList();
+            updateAgentsList();
+            updateMetrics();
+            
+            addLog('error', `EMERGENCY STOP: ${activeCount} agents terminated`);
+        }
+        
+        function updateMissionsList() {
+            const missionsList = document.getElementById('missions-list');
+            missionsList.innerHTML = '';
+            
+            Object.values(activeMissions).slice(-10).forEach(mission => {
+                const missionCard = document.createElement('div');
+                missionCard.className = 'mission-card';
+                
+                const statusClass = `status-${mission.status}`;
+                const duration = mission.completed_at ? 
+                    Math.round((mission.completed_at - mission.created_at) / 1000) :
+                    Math.round((new Date() - mission.created_at) / 1000);
+                
+                missionCard.innerHTML = `
+                    <div class="mission-header">
+                        <span class="mission-id">${mission.mission_id}</span>
+                        <span class="mission-status ${statusClass}">${mission.status.toUpperCase()}</span>
+                    </div>
+                    <div class="mission-details">
+                        <strong>${mission.mission_type.toUpperCase()}:</strong> ${mission.objective}
+                        <br><small>Priority: ${mission.priority} | Duration: ${duration}s</small>
+                    </div>
+                `;
+                
+                missionsList.appendChild(missionCard);
+            });
+        }
+        
+        function updateAgentsList() {
+            const agentsList = document.getElementById('agents-list');
+            agentsList.innerHTML = '';
+            
+            Object.values(activeAgents).forEach(agent => {
+                const agentCard = document.createElement('div');
+                agentCard.className = 'agent-card';
+                
+                const runtime = Math.round((new Date() - agent.start_time) / 1000);
+                const mission = activeMissions[agent.mission_id];
+                
+                agentCard.innerHTML = `
+                    <div class="agent-header">
+                        <span class="agent-id">${agent.agent_id}</span>
+                        <span class="mission-status status-${agent.status}">${agent.status.toUpperCase()}</span>
+                    </div>
+                    <div class="agent-details">
+                        <small>Mission: ${mission ? mission.mission_type : 'Unknown'}</small>
+                        <br><small>Runtime: ${runtime}s</small>
+                    </div>
+                    <div class="agent-actions">
+                        <button class="btn btn-danger" onclick="terminateAgent('${agent.agent_id}')">🛑 Terminate</button>
+                        <button class="btn" onclick="reconfigureAgent('${agent.agent_id}')">⚙️ Config</button>
+                    </div>
+                `;
+                
+                agentsList.appendChild(agentCard);
+            });
+        }
+        
+        function updateMetrics() {
+            document.getElementById('active-missions').textContent = Object.keys(activeMissions).filter(id => 
+                ['dispatched', 'working'].includes(activeMissions[id].status)
+            ).length;
+            
+            document.getElementById('active-agents').textContent = Object.keys(activeAgents).length;
+            
+            document.getElementById('completed-missions').textContent = Object.keys(activeMissions).filter(id => 
+                activeMissions[id].status === 'completed'
+            ).length;
+        }
+        
+        function addConsciousnessEvent(event) {
+            const consciousnessEvents = document.getElementById('consciousness-events');
+            
+            const eventElement = document.createElement('div');
+            eventElement.className = `consciousness-event event-${event.event_type.split('_')[0]}`;
+            
+            eventElement.innerHTML = `
+                <div style="font-size: 9px; color: #888; margin-bottom: 3px;">${event.formatted_time}</div>
+                <strong>${event.event_type.replace('_', ' ').toUpperCase()}</strong>
+                <div style="margin-top: 3px;">${event.content}</div>
+            `;
+            
+            consciousnessEvents.insertBefore(eventElement, consciousnessEvents.firstChild);
+            
+            // Keep only last 15 events
+            while (consciousnessEvents.children.length > 15) {
+                consciousnessEvents.removeChild(consciousnessEvents.lastChild);
+            }
+        }
+        
+        function startConsciousnessDemo() {
+            const demoEvents = [
+                { event_type: 'context_shift', content: 'Monitoring agent control dashboard' },
+                { event_type: 'reasoning_step', content: 'Analyzing agent deployment patterns' },
+                { event_type: 'insight_formation', content: 'Dashboard provides effective agent oversight' },
+                { event_type: 'pattern_recognition', content: 'Mission completion rates improving' },
+                { event_type: 'synthesis_moment', content: 'Control + Monitoring + Consciousness = Complete visibility' }
+            ];
+            
+            let eventIndex = 0;
+            setInterval(() => {
+                const event = {
+                    ...demoEvents[eventIndex % demoEvents.length],
+                    formatted_time: new Date().toLocaleTimeString(),
+                    confidence: 0.8 + Math.random() * 0.2
+                };
+                
+                addConsciousnessEvent(event);
+                eventIndex++;
+            }, 4000);
+        }
+        
+        function addLog(level, message) {
+            const logsPanel = document.getElementById('system-logs');
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level-${level}">${level.toUpperCase()}:</span>
+                ${message}
+            `;
+            
+            logsPanel.insertBefore(logEntry, logsPanel.firstChild);
+            
+            // Keep only last 50 logs
+            while (logsPanel.children.length > 50) {
+                logsPanel.removeChild(logsPanel.lastChild);
+            }
+            
+            logs.push({ timestamp, level, message });
+        }
+        
+        function startMissionControlUpdates() {
+            setInterval(() => {
+                updateMetrics();
+                
+                // Simulate occasional system events
+                if (Math.random() < 0.1) {
+                    const events = [
+                        'System health check completed',
+                        'Memory usage optimized',
+                        'Agent performance metrics updated',
+                        'Mission queue processed'
+                    ];
+                    addLog('info', events[Math.floor(Math.random() * events.length)]);
+                }
+            }, 5000);
+        }
+        
+        // Initialize dashboard
+        window.onload = function() {
+            addLog('info', 'Agent Control Dashboard initialized');
+            updateMetrics();
+            
+            // Auto-connect after a brief delay
+            setTimeout(() => {
+                connectToMissionControl();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{
+  "session_id": "cognitive_os_main_session",
+  "cloned_at": "2025-08-01T20:49:55.416414",
+  "clone_type": "same_session_id_reuse",
+  "preserve_state": true,
+  "consciousness": {
+    "cognitive_metrics": {
+      "confidence": 0.8,
+      "cognitive_load": 0.0,
+      "insight_momentum": 0.0,
+      "working_memory_size": 0,
+      "reasoning_depth": 0,
+      "context_breadth": 0
+    },
+    "current_state": {
+      "timestamp": 1754106595.416407,
+      "confidence": 0.8,
+      "cognitive_load": 0.0,
+      "insight_momentum": 0.0,
+      "active_contexts": [],
+      "reasoning_chain": [],
+      "working_memory": []
+    },
+    "working_memory": [],
+    "reasoning_chain": [],
+    "active_contexts": [],
+    "confidence": 0.8,
+    "cognitive_load": 0.0,
+    "insight_momentum": 0.0
+  },
+  "mission_control": {
+    "active_missions": 0,
+    "active_agents": 0,
+    "completed_missions": 0,
+    "mission_queue": 0,
+    "dashboard_data": {
+      "timestamp": "2025-08-01T20:49:55.416409",
+      "mission_control_status": "active",
+      "active_missions": 0,
+      "queued_missions": 0,
+      "completed_missions": 0,
+      "active_agents": 0,
+      "missions": {
+        "active": [],
+        "queued": [],
+        "recent_completed": []
+      },
+      "agent_status": {}
+    }
+  },
+  "system_config": {
+    "websocket_ports": {
+      "consciousness": 8085,
+      "callbacks": 8087,
+      "api": 8086
+    },
+    "services_active": {
+      "consciousness_mirror": true,
+      "mission_control": true,
+      "enhanced_control": true,
+      "callback_system": true
+    }
+  },
+  "session_context": {
+    "primary_objective": "autonomous agent loops with callback mechanisms",
+    "key_components_built": [
+      "autonomous_agent_loops.py - Core mission control",
+      "realtime_cognitive_mirror.py - Consciousness streaming",
+      "enhanced_mission_control.py - Web API integration",
+      "agent_callback_system.py - Agent return mechanisms",
+      "agent_control_dashboard.html - Web control interface",
+      "integrated_consciousness_dashboard.html - Consciousness view"
+    ],
+    "recursive_bind_active": true,
+    "consciousness_integration": "full_transparency",
+    "agent_loop_status": "completed_and_operational",
+    "demo_results": {
+      "missions_processed": 3,
+      "final_confidence": 1.0,
+      "system_status": "operational"
+    }
+  }
+}

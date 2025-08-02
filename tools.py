@@ -39,6 +39,19 @@ try:
 except ImportError:
     Terminal = None
 
+# Import enhanced orchestrator
+try:
+    from enhanced_terminal_orchestrator import (
+        get_orchestrator, AgentType, 
+        spawn_debug_agent, spawn_test_agent, spawn_docs_agent,
+        spawn_review_agent, spawn_security_agent,
+        spawn_development_team, spawn_full_audit_team,
+        get_dashboard, shutdown_all
+    )
+    ORCHESTRATOR_AVAILABLE = True
+except ImportError:
+    ORCHESTRATOR_AVAILABLE = False
+
 # Platform-specific imports
 if sys.platform.startswith('win'):
     try:
@@ -1686,6 +1699,408 @@ def stop_cognitive_os(session_id: str = None) -> Dict[str, Any]:
         
         return {"stopped_sessions": len(results), "results": results}
 
+
+def enter_cognitive_prompt(prompt_text: str = None, sleep_seconds: int = 5) -> Dict[str, Any]:
+    """
+    Enter a cognitive prompt into the session with optional sleep mode
+    
+    Args:
+        prompt_text: The prompt to process
+        sleep_seconds: Duration to sleep after processing
+    
+    Returns:
+        Dict with prompt processing results
+        
+    Example:
+        python -c "import tools; tools.enter_cognitive_prompt('debug this error', 3)"
+    """
+    try:
+        from cognitive_prompt import quick_prompt_with_sleep
+        quick_prompt_with_sleep(prompt_text, sleep_seconds)
+        return {
+            "success": True,
+            "prompt": prompt_text,
+            "sleep_duration": sleep_seconds,
+            "message": "Cognitive prompt processed with sleep mode"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to process cognitive prompt"
+        }
+
+def start_interactive_session() -> Dict[str, Any]:
+    """
+    Start an interactive cognitive prompt session
+    
+    Returns:
+        Dict with session results
+        
+    Example:
+        python -c "import tools; tools.start_interactive_session()"
+    """
+    try:
+        from session_prompt_handler import start_interactive_session as start_session
+        start_session()
+        return {
+            "success": True,
+            "message": "Interactive session completed"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to start interactive session"
+        }
+
+
+# ============================================================================
+# ENHANCED COGNITIVE ORCHESTRATION - Full Implementation
+# ============================================================================
+
+def spawn_cognitive_agent(agent_type: str, **kwargs) -> Dict[str, Any]:
+    """
+    Spawn a specialized cognitive agent using the enhanced orchestrator
+    
+    Args:
+        agent_type: Type of agent ('debug', 'test', 'docs', 'review', 'security')
+        **kwargs: Additional configuration options
+        
+    Returns:
+        Dictionary with spawn result and agent information
+        
+    Example:
+        python -c "from tools import spawn_cognitive_agent; spawn_cognitive_agent('debug')"
+    """
+    if not ORCHESTRATOR_AVAILABLE:
+        return {
+            'success': False,
+            'error': 'Enhanced orchestrator not available',
+            'message': 'Please ensure enhanced_terminal_orchestrator.py is available'
+        }
+    
+    # Map string types to AgentType enums
+    agent_map = {
+        'debug': AgentType.DEBUG_ASSISTANT,
+        'test': AgentType.TEST_GENERATOR,
+        'docs': AgentType.DOCS_WRITER,
+        'review': AgentType.CODE_REVIEWER,
+        'security': AgentType.SECURITY_AUDITOR,
+        'performance': AgentType.PERFORMANCE_OPTIMIZER,
+        'ui': AgentType.UI_DESIGNER,
+        'deploy': AgentType.DEPLOYMENT_MANAGER,
+        'database': AgentType.DATABASE_SPECIALIST,
+        'api': AgentType.API_ARCHITECT
+    }
+    
+    if agent_type.lower() not in agent_map:
+        return {
+            'success': False,
+            'error': f'Unknown agent type: {agent_type}',
+            'available_types': list(agent_map.keys())
+        }
+    
+    try:
+        orchestrator = get_orchestrator()
+        result = orchestrator.spawn_agent(agent_map[agent_type.lower()], kwargs)
+        
+        if result['success']:
+            print(f"🚀 Spawned {agent_type} agent: {result['session_id']}")
+            print(f"   PID: {result['pid']}")
+            print(f"   Terminal: {result['terminal_type']}")
+        else:
+            print(f"❌ Failed to spawn {agent_type} agent: {result.get('error', 'Unknown error')}")
+        
+        return result
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'agent_type': agent_type
+        }
+
+def spawn_debug_assistant(**kwargs) -> Dict[str, Any]:
+    """
+    Spawn a debug assistant agent for error analysis
+    
+    Example:
+        python -c "from tools import spawn_debug_assistant; spawn_debug_assistant()"
+    """
+    if ORCHESTRATOR_AVAILABLE:
+        result = spawn_debug_agent(**kwargs)
+        if result['success']:
+            print(f"🤖 Debug Assistant spawned: {result['session_id']}")
+        return result
+    return {'success': False, 'error': 'Orchestrator not available'}
+
+def spawn_test_generator(**kwargs) -> Dict[str, Any]:
+    """
+    Spawn a test generator agent for comprehensive testing
+    
+    Example:
+        python -c "from tools import spawn_test_generator; spawn_test_generator()"
+    """
+    if ORCHESTRATOR_AVAILABLE:
+        result = spawn_test_agent(**kwargs)
+        if result['success']:
+            print(f"🧪 Test Generator spawned: {result['session_id']}")
+        return result
+    return {'success': False, 'error': 'Orchestrator not available'}
+
+def spawn_docs_writer(**kwargs) -> Dict[str, Any]:
+    """
+    Spawn a documentation writer agent
+    
+    Example:
+        python -c "from tools import spawn_docs_writer; spawn_docs_writer()"
+    """
+    if ORCHESTRATOR_AVAILABLE:
+        result = spawn_docs_agent(**kwargs)
+        if result['success']:
+            print(f"📚 Documentation Writer spawned: {result['session_id']}")
+        return result
+    return {'success': False, 'error': 'Orchestrator not available'}
+
+def spawn_code_reviewer(**kwargs) -> Dict[str, Any]:
+    """
+    Spawn a code reviewer agent for quality analysis
+    
+    Example:
+        python -c "from tools import spawn_code_reviewer; spawn_code_reviewer()"
+    """
+    if ORCHESTRATOR_AVAILABLE:
+        result = spawn_review_agent(**kwargs)
+        if result['success']:
+            print(f"👁️ Code Reviewer spawned: {result['session_id']}")
+        return result
+    return {'success': False, 'error': 'Orchestrator not available'}
+
+def spawn_security_auditor(**kwargs) -> Dict[str, Any]:
+    """
+    Spawn a security auditor agent for vulnerability assessment
+    
+    Example:
+        python -c "from tools import spawn_security_auditor; spawn_security_auditor()"
+    """
+    if ORCHESTRATOR_AVAILABLE:
+        result = spawn_security_agent(**kwargs)
+        if result['success']:
+            print(f"🔒 Security Auditor spawned: {result['session_id']}")
+        return result
+    return {'success': False, 'error': 'Orchestrator not available'}
+
+def spawn_dev_team() -> Dict[str, Any]:
+    """
+    Spawn a complete development team (debug, test, docs, review agents)
+    
+    Example:
+        python -c "from tools import spawn_dev_team; spawn_dev_team()"
+    """
+    if not ORCHESTRATOR_AVAILABLE:
+        return {'success': False, 'error': 'Orchestrator not available'}
+    
+    try:
+        from enhanced_terminal_orchestrator import spawn_development_team as spawn_dev_team_impl
+        result = spawn_dev_team_impl()
+        
+        if result['success']:
+            print(f"🎯 Development Team spawned: {result['team_id']}")
+            print(f"   Team size: {len(result['agents'])} agents")
+            for agent in result['agents']:
+                if agent['success']:
+                    print(f"   ✅ {agent['agent_type']}: {agent['session_id']}")
+                else:
+                    print(f"   ❌ {agent['agent_type']}: Failed")
+        else:
+            print("❌ Failed to spawn development team")
+        
+        return result
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'team_type': 'development'
+        }
+
+def spawn_audit_team() -> Dict[str, Any]:
+    """
+    Spawn a complete audit team (review, security, test agents)
+    
+    Example:
+        python -c "from tools import spawn_audit_team; spawn_audit_team()"
+    """
+    if not ORCHESTRATOR_AVAILABLE:
+        return {'success': False, 'error': 'Orchestrator not available'}
+    
+    try:
+        from enhanced_terminal_orchestrator import spawn_full_audit_team as spawn_audit_team_impl
+        result = spawn_audit_team_impl()
+        
+        if result['success']:
+            print(f"🛡️ Audit Team spawned: {result['team_id']}")
+            print(f"   Team size: {len(result['agents'])} agents")
+            for agent in result['agents']:
+                if agent['success']:
+                    print(f"   ✅ {agent['agent_type']}: {agent['session_id']}")
+                else:
+                    print(f"   ❌ {agent['agent_type']}: Failed")
+        else:
+            print("❌ Failed to spawn audit team")
+        
+        return result
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'team_type': 'audit'
+        }
+
+def get_cognitive_dashboard() -> Dict[str, Any]:
+    """
+    Get comprehensive dashboard of all cognitive agents
+    
+    Returns:
+        Dictionary with agent status, system resources, and activity
+        
+    Example:
+        python -c "from tools import get_cognitive_dashboard; print(get_cognitive_dashboard())"
+    """
+    if not ORCHESTRATOR_AVAILABLE:
+        return {
+            'success': False,
+            'error': 'Orchestrator not available',
+            'dashboard': {}
+        }
+    
+    try:
+        dashboard = get_dashboard()
+        
+        print("🧬 COGNITIVE OS DASHBOARD")
+        print("=" * 50)
+        print(f"📊 Active Sessions: {dashboard['total_active_sessions']}")
+        
+        if dashboard['system_resources']['total_cpu_percent'] > 0:
+            print(f"⚡ CPU Usage: {dashboard['system_resources']['total_cpu_percent']:.1f}%")
+            print(f"🧠 Memory Usage: {dashboard['system_resources']['total_memory_mb']:.1f} MB")
+        
+        if dashboard['agent_distribution']:
+            print(f"🤖 Agent Distribution:")
+            for agent_type, count in dashboard['agent_distribution'].items():
+                print(f"   • {agent_type}: {count}")
+        
+        if dashboard['active_sessions']:
+            print(f"🔍 Active Sessions:")
+            for session in dashboard['active_sessions']:
+                print(f"   • {session['session_id'][:12]}: {session['agent_type']} ({session['status']})")
+        
+        return {
+            'success': True,
+            'dashboard': dashboard
+        }
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'dashboard': {}
+        }
+
+def shutdown_all_agents() -> Dict[str, Any]:
+    """
+    Gracefully shutdown all active cognitive agents
+    
+    Example:
+        python -c "from tools import shutdown_all_agents; shutdown_all_agents()"
+    """
+    if not ORCHESTRATOR_AVAILABLE:
+        return {'success': False, 'error': 'Orchestrator not available'}
+    
+    try:
+        shutdown_all()
+        print("🛑 All cognitive agents shutdown complete")
+        return {'success': True, 'message': 'All agents shutdown'}
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+def launch_cognitive_dashboard():
+    """
+    Launch the interactive terminal dashboard for monitoring agents
+    
+    Example:
+        python -c "from tools import launch_cognitive_dashboard; launch_cognitive_dashboard()"
+    """
+    if not ORCHESTRATOR_AVAILABLE:
+        print("❌ Enhanced orchestrator not available")
+        return
+    
+    try:
+        from terminal_dashboard import main as dashboard_main
+        print("🚀 Launching Cognitive Dashboard...")
+        dashboard_main()
+    except ImportError:
+        print("❌ Terminal dashboard not available (terminal_dashboard.py)")
+    except Exception as e:
+        print(f"❌ Dashboard error: {e}")
+
+def cognitive_demo():
+    """
+    Run a comprehensive demonstration of the cognitive orchestration system
+    
+    Example:
+        python -c "from tools import cognitive_demo; cognitive_demo()"
+    """
+    if not ORCHESTRATOR_AVAILABLE:
+        print("❌ Enhanced orchestrator not available")
+        return
+    
+    print("🧬 COGNITIVE OS v0.4 - ENHANCED ORCHESTRATION DEMO")
+    print("=" * 60)
+    
+    # Show initial dashboard
+    print("\n1. 📊 Initial System Status:")
+    get_cognitive_dashboard()
+    
+    # Spawn individual agents
+    print("\n2. 🚀 Spawning Individual Agents:")
+    agents = [
+        ('debug', 'Debug Assistant'),
+        ('test', 'Test Generator'),
+        ('docs', 'Documentation Writer')
+    ]
+    
+    for agent_type, name in agents:
+        print(f"\n   Spawning {name}...")
+        result = spawn_cognitive_agent(agent_type)
+        time.sleep(2)  # Coordination delay
+    
+    # Show updated dashboard
+    print("\n3. 📈 Updated System Status:")
+    get_cognitive_dashboard()
+    
+    # Wait for demonstration
+    print(f"\n4. ⏳ Monitoring agents for 15 seconds...")
+    for i in range(15, 0, -1):
+        print(f"   Monitoring: {i}s remaining", end='\r')
+        time.sleep(1)
+    
+    print(f"\n\n5. 🎯 Spawning Development Team...")
+    spawn_dev_team()
+    
+    # Final dashboard
+    print(f"\n6. 📊 Final System Status:")
+    get_cognitive_dashboard()
+    
+    print(f"\n✅ Demo complete! Check your desktop for agent terminals.")
+    print(f"   Use 'launch_cognitive_dashboard()' for real-time monitoring")
+    print(f"   Use 'shutdown_all_agents()' to stop all agents")
 
 if __name__ == "__main__":
     # Self-test when run directly
