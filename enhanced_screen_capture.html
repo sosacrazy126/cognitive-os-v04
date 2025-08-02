@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Screen Capture - Cognitive OS v0.4</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 20px; 
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .controls { 
+            margin: 20px 0; 
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 5px; 
+            font-size: 16px; 
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .primary { background: #007acc; color: white; }
+        .primary:hover { background: #005a9e; }
+        .success { background: #28a745; color: white; }
+        .success:hover { background: #1e7e34; }
+        .danger { background: #dc3545; color: white; }
+        .danger:hover { background: #c82333; }
+        .warning { background: #ffc107; color: #212529; }
+        .warning:hover { background: #e0a800; }
+        
+        .status { 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            font-weight: bold;
+        }
+        .status.success { background: #155724; border: 1px solid #c3e6cb; color: #d4edda; }
+        .status.error { background: #721c24; border: 1px solid #f5c6cb; color: #f8d7da; }
+        .status.info { background: #0c5460; border: 1px solid #b8daff; color: #d1ecf1; }
+        
+        video { 
+            width: 100%; 
+            max-width: 800px; 
+            border: 2px solid #007acc; 
+            border-radius: 8px;
+            background: #000;
+        }
+        canvas {
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            background: #000;
+        }
+        .metrics {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .metric {
+            text-align: center;
+            padding: 10px;
+            background: #444;
+            border-radius: 5px;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007acc;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        .connection-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .connected { background: #28a745; }
+        .disconnected { background: #dc3545; }
+        .log {
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid #444;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid #333;
+        }
+        .timestamp {
+            color: #888;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧬 Enhanced Screen Capture - Cognitive OS v0.4</h1>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value" id="fps-counter">0</div>
+                <div class="metric-label">FPS</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="frame-count">0</div>
+                <div class="metric-label">Frames Sent</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="data-sent">0 KB</div>
+                <div class="metric-label">Data Sent</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="connection-status">
+                    <span class="connection-status disconnected"></span>Disconnected
+                </div>
+                <div class="metric-label">WebSocket Status</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="start-capture" class="primary">📺 Start Screen Capture</button>
+            <button id="stop-capture" class="danger" disabled>⏹️ Stop Capture</button>
+            <button id="connect-websocket" class="success">🔗 Connect to Cognitive OS</button>
+            <button id="start-streaming" class="warning" disabled>🚀 Start Frame Streaming</button>
+            <button id="test-connection" class="primary">🧬 Test Connection</button>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <h3>🖥️ Live Screen Capture</h3>
+                <video id="screen-video" autoplay muted></video>
+            </div>
+            <div>
+                <h3>📸 Frame Processing</h3>
+                <canvas id="frame-canvas" width="400" height="300"></canvas>
+            </div>
+        </div>
+        
+        <div>
+            <h3>📋 Connection Log</h3>
+            <div id="connection-log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        class CognitiveScreenCapture {
+            constructor() {
+                this.screenStream = null;
+                this.websocket = null;
+                this.canvas = document.getElementById('frame-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.video = document.getElementById('screen-video');
+                this.isStreaming = false;
+                this.frameCount = 0;
+                this.totalDataSent = 0;
+                this.fpsCounter = 0;
+                this.lastFpsTime = Date.now();
+                this.websocketUrl = 'ws://localhost:8084/ws';
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.logMessage('🧬 Cognitive Screen Capture initialized');
+            }
+            
+            initializeElements() {
+                this.elements = {
+                    startCapture: document.getElementById('start-capture'),
+                    stopCapture: document.getElementById('stop-capture'),
+                    connectWebsocket: document.getElementById('connect-websocket'),
+                    startStreaming: document.getElementById('start-streaming'),
+                    testConnection: document.getElementById('test-connection'),
+                    status: document.getElementById('status'),
+                    fpsCounter: document.getElementById('fps-counter'),
+                    frameCount: document.getElementById('frame-count'),
+                    dataSent: document.getElementById('data-sent'),
+                    connectionStatus: document.getElementById('connection-status'),
+                    log: document.getElementById('connection-log')
+                };
+            }
+            
+            setupEventListeners() {
+                this.elements.startCapture.onclick = () => this.startScreenCapture();
+                this.elements.stopCapture.onclick = () => this.stopScreenCapture();
+                this.elements.connectWebsocket.onclick = () => this.connectWebSocket();
+                this.elements.startStreaming.onclick = () => this.toggleStreaming();
+                this.elements.testConnection.onclick = () => this.testConnection();
+            }
+            
+            logMessage(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span>${message}`;
+                this.elements.log.appendChild(logEntry);
+                this.elements.log.scrollTop = this.elements.log.scrollHeight;
+                console.log(`[${timestamp}] ${message}`);
+            }
+            
+            showStatus(message, type) {
+                this.elements.status.textContent = message;
+                this.elements.status.className = `status ${type}`;
+                this.elements.status.style.display = 'block';
+                
+                setTimeout(() => {
+                    this.elements.status.style.display = 'none';
+                }, 5000);
+            }
+            
+            async startScreenCapture() {
+                try {
+                    this.logMessage('📺 Starting screen capture...');
+                    
+                    this.screenStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: {
+                            mediaSource: 'screen',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            frameRate: { ideal: 10, max: 30 }
+                        },
+                        audio: false
+                    });
+                    
+                    this.video.srcObject = this.screenStream;
+                    
+                    this.elements.startCapture.disabled = true;
+                    this.elements.stopCapture.disabled = false;
+                    this.elements.startStreaming.disabled = false;
+                    
+                    this.showStatus('✅ Screen capture started successfully!', 'success');
+                    this.logMessage('✅ Screen capture active');
+                    
+                    // Handle stream end
+                    const track = this.screenStream.getVideoTracks()[0];
+                    track.onended = () => {
+                        this.stopScreenCapture();
+                        this.showStatus('ℹ️ Screen capture ended by user', 'info');
+                    };
+                    
+                } catch (error) {
+                    this.logMessage(`❌ Screen capture failed: ${error.message}`, 'error');
+                    this.showStatus(`❌ Failed to start capture: ${error.message}`, 'error');
+                }
+            }
+            
+            stopScreenCapture() {
+                if (this.screenStream) {
+                    this.screenStream.getTracks().forEach(track => track.stop());
+                    this.screenStream = null;
+                    this.video.srcObject = null;
+                    
+                    this.elements.startCapture.disabled = false;
+                    this.elements.stopCapture.disabled = true;
+                    this.elements.startStreaming.disabled = true;
+                    
+                    if (this.isStreaming) {
+                        this.toggleStreaming();
+                    }
+                    
+                    this.logMessage('⏹️ Screen capture stopped');
+                }
+            }
+            
+            async connectWebSocket() {
+                try {
+                    this.logMessage(`🔗 Connecting to ${this.websocketUrl}...`);
+                    
+                    this.websocket = new WebSocket(this.websocketUrl);
+                    
+                    this.websocket.onopen = () => {
+                        this.logMessage('✅ WebSocket connected');
+                        this.updateConnectionStatus(true);
+                        this.showStatus('✅ Connected to Cognitive OS daemon', 'success');
+                    };
+                    
+                    this.websocket.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            this.logMessage(`📥 Received: ${data.type} - ${data.message}`);
+                        } catch (e) {
+                            this.logMessage(`📥 Received binary data: ${event.data.length} bytes`);
+                        }
+                    };
+                    
+                    this.websocket.onerror = (error) => {
+                        this.logMessage('❌ WebSocket error occurred', 'error');
+                        this.updateConnectionStatus(false);
+                    };
+                    
+                    this.websocket.onclose = () => {
+                        this.logMessage('🔌 WebSocket connection closed');
+                        this.updateConnectionStatus(false);
+                        if (this.isStreaming) {
+                            this.toggleStreaming();
+                        }
+                    };
+                    
+                } catch (error) {
+                    this.logMessage(`❌ WebSocket connection failed: ${error.message}`, 'error');
+                    this.showStatus(`❌ Connection failed: ${error.message}`, 'error');
+                }
+            }
+            
+            updateConnectionStatus(connected) {
+                const statusEl = this.elements.connectionStatus;
+                const indicator = statusEl.querySelector('.connection-status');
+                
+                if (connected) {
+                    indicator.className = 'connection-status connected';
+                    statusEl.innerHTML = '<span class="connection-status connected"></span>Connected';
+                } else {
+                    indicator.className = 'connection-status disconnected';
+                    statusEl.innerHTML = '<span class="connection-status disconnected"></span>Disconnected';
+                }
+            }
+            
+            async testConnection() {
+                if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+                    this.showStatus('❌ WebSocket not connected', 'error');
+                    return;
+                }
+                
+                const testMessage = {
+                    type: 'test',
+                    message: 'Enhanced screen capture test',
+                    timestamp: new Date().toISOString(),
+                    client: 'cognitive-screen-capture-v0.4'
+                };
+                
+                this.websocket.send(JSON.stringify(testMessage));
+                this.logMessage('📤 Test message sent');
+            }
+            
+            async captureFrame() {
+                if (!this.screenStream || !this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+                    return;
+                }
+                
+                try {
+                    // Capture frame from video to canvas
+                    this.canvas.width = this.video.videoWidth || 800;
+                    this.canvas.height = this.video.videoHeight || 600;
+                    this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+                    
+                    // Convert canvas to blob
+                    this.canvas.toBlob(async (blob) => {
+                        if (blob && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                            // Convert blob to base64 for JSON transmission
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                                const base64Data = reader.result.split(',')[1];
+                                
+                                const frameMessage = {
+                                    type: 'screen_frame',
+                                    data: base64Data,
+                                    width: this.canvas.width,
+                                    height: this.canvas.height,
+                                    timestamp: Date.now(),
+                                    frameNumber: this.frameCount
+                                };
+                                
+                                this.websocket.send(JSON.stringify(frameMessage));
+                                this.frameCount++;
+                                this.totalDataSent += JSON.stringify(frameMessage).length;
+                                
+                                // Update metrics
+                                this.updateMetrics();
+                            };
+                            reader.readAsDataURL(blob);
+                        }
+                    }, 'image/jpeg', 0.8);
+                    
+                } catch (error) {
+                    this.logMessage(`❌ Frame capture error: ${error.message}`, 'error');
+                }
+            }
+            
+            updateMetrics() {
+                this.elements.frameCount.textContent = this.frameCount;
+                this.elements.dataSent.textContent = `${Math.round(this.totalDataSent / 1024)} KB`;
+                
+                // Calculate FPS
+                const now = Date.now();
+                if (now - this.lastFpsTime >= 1000) {
+                    this.elements.fpsCounter.textContent = Math.round(this.fpsCounter);
+                    this.fpsCounter = 0;
+                    this.lastFpsTime = now;
+                } else {
+                    this.fpsCounter++;
+                }
+            }
+            
+            toggleStreaming() {
+                if (!this.isStreaming) {
+                    if (!this.screenStream) {
+                        this.showStatus('❌ Start screen capture first', 'error');
+                        return;
+                    }
+                    if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+                        this.showStatus('❌ Connect to WebSocket first', 'error');
+                        return;
+                    }
+                    
+                    this.isStreaming = true;
+                    this.elements.startStreaming.textContent = '⏸️ Stop Streaming';
+                    this.elements.startStreaming.className = 'danger';
+                    
+                    // Start streaming at 5 FPS
+                    this.streamingInterval = setInterval(() => {
+                        this.captureFrame();
+                    }, 200); // 5 FPS
+                    
+                    this.logMessage('🚀 Frame streaming started at 5 FPS');
+                    this.showStatus('🚀 Frame streaming active!', 'success');
+                    
+                } else {
+                    this.isStreaming = false;
+                    this.elements.startStreaming.textContent = '🚀 Start Frame Streaming';
+                    this.elements.startStreaming.className = 'warning';
+                    
+                    if (this.streamingInterval) {
+                        clearInterval(this.streamingInterval);
+                    }
+                    
+                    this.logMessage('⏸️ Frame streaming stopped');
+                    this.showStatus('⏸️ Frame streaming stopped', 'info');
+                }
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            window.cognitiveCapture = new CognitiveScreenCapture();
+        });
+    </script>
+</body>
+</html>

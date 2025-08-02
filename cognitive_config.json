@@ -1,0 +1,39 @@
+{
+  "cognitive_os": {
+    "version": "0.4",
+    "auto_start": {
+      "enabled": true,
+      "screen_capture": true,
+      "websocket_connection": true,
+      "frame_streaming": true,
+      "browser_interface": "auto_screen_capture.html"
+    },
+    "screen_capture": {
+      "fps": 5,
+      "quality": 0.7,
+      "resolution": {
+        "width": 1920,
+        "height": 1080
+      },
+      "prefer_current_tab": false,
+      "exclude_self": true
+    },
+    "websocket": {
+      "default_port": 8084,
+      "reconnect_attempts": 5,
+      "reconnect_delay": 3000,
+      "connection_timeout": 5000
+    },
+    "daemon": {
+      "enhanced_mode": true,
+      "process_frames": true,
+      "log_level": "INFO",
+      "background_mode": true
+    },
+    "ui": {
+      "show_metrics": true,
+      "auto_hide_controls": false,
+      "theme": "dark"
+    }
+  }
+}

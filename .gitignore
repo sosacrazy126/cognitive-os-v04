@@ -1,0 +1,51 @@
+# Cognitive OS v0.4 - Git Ignore
+
+# Log files
+*.log
+daemon.log
+enhanced_daemon.log
+firefox*.log
+tools.log
+
+# Database files
+*.db
+terminal_sessions.db
+
+# Process ID files
+.cognitive_pids
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+.Trash-*
+ehthumbs.db
+
+# Local configuration
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Fabric pattern studio refactored (this was for another agent)
+fabric_pattern_studio_refactored/
